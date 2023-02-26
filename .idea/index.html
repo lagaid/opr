@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src='https://cdn.plot.ly/plotly-2.18.2.min.js'></script>
+    <style>
+        div {
+            //height: 75%;
+            //width: 75%;
+
+        }
+    </style>
+</head>
+<body>
+
+<h2>Функция и метод</h2>
+<input id ="function" >
+<select id="method">
+    <option>Метод перебора по сетку</option>
+    <option>Метод Монте-Карло</option>
+    <option>Метод Хука-Дживса</option>
+    <option>Метод Штрафных функций</option>
+</select>
+<h2>Ограничения</h2>
+<table id="table">
+    <tr>
+        <td><input></td>
+        <td>
+            <select>
+            <option><</option>
+            <option> >  </option>
+            <option><=</option>
+            <option> >= </option>
+            </select>
+        </td>
+        <td><input></td>
+        <td><button class="btnDelete">Delete</button></td>
+    </tr>
+</table>
+<button id ="add">Добавить ограничение</button>
+
+
+
+<form id="grid">
+    <h3>Метод перебора по сетке</h3>
+    <label for="from"> От</label>
+    <input type="number" id="from">
+    <label for="to"> До</label>
+    <input type="number" id="to">
+    <label for="step"> С шагом</label>
+    <input type="number" id="step">
+</form>
+<button onclick="simple()">Start</button>
+
+
+
+<div id='myDiv'><!-- Plotly chart will be drawn inside this DIV --></div>
+<script>
+    $(document).ready(function(){
+        $("#add").click(function(){
+
+            var row = " <tr>\n" +
+                "        <td><input></td>\n" +
+                "        <td>\n" +
+                "            <select>\n" +
+                "            <option><</option>\n" +
+                "            <option> >  </option>\n" +
+                "            <option><=</option>\n" +
+                "            <option> >= </option>\n" +
+                "            </select>\n" +
+                "        </td>\n" +
+                "        <td><input></td>\n" +
+                "<td><button class=\"btnDelete\">Delete</button></td>"+
+                "    </tr>";
+            $("table tbody").append(row);
+        });
+    });
+
+    $("#table").on('click', '.btnDelete', function () {
+        $(this).closest('tr').remove();
+    });
+
+    function getLimits(){
+        tb =[[]];
+        let table = document.getElementById("table");
+        for (let row of table.rows) {
+            t=[];
+            for(let cell of row.cells){
+                t.push(cell.children[0].value);
+                // console.log(cell.children[0].value);
+            }
+            t.pop();
+            tb.push(t);
+        }
+        return tb;
+    }
+
+    function isOk(x,y){
+        let scope={
+            x1:x,
+            x2:y
+        }
+        tb= getLimits();
+
+        for (let i = 1; i < tb.length; i++) {
+            arr = tb[i];
+
+            if(equls(math.evaluate(arr[0],scope),arr[1],math.evaluate(arr[2],scope))==false){
+                return false;
+            }
+        }
+        return true;
+    }
+    function equls(x,sign,y){
+        switch (sign){
+            case '>': return x>y;
+            case '<': return x<y;
+            case '>=': return x>=y;
+            case '<=': return x<=y;
+
+        }
+    }
+  function simple(){
+      x1 =[];
+      y1=[];
+      let n1 = document.getElementById("from").value;
+      let n2 = document.getElementById("to").value;
+      let step = document.getElementById("step").value;
+
+     let n = (Math.abs(n1)+Math.abs(n2))/step;
+      n = Math.floor(n);
+      for(let i =0;i<n;i++){
+          x1.push(Number(n1)+(step*i));
+          y1.push(Number(n1)+(step*i));
+      }
+
+
+
+      z1=[];
+      true_value_x =[];
+      true_value_y =[];
+      true_value_z =[];
+      for(let i = 0;i<x1.length;i++){
+          tmp=[];
+
+          for(let j =0; j<y1.length;j++){
+              if(isOk(x1[i],y1[j])==true){
+                  true_value_x.push(x1[i]);
+                  true_value_y.push(y1[j]);
+
+
+              }
+              let scope={
+                  x1:x1[i],
+                  x2:y1[j]
+              }
+              //x1^2 +x2^2 +x1*x2 -6*x2
+              tmp.push( math.evaluate(document.getElementById("function").value,scope));
+
+          }
+          z1.push(tmp);
+
+      }
+
+      for(let i = 0;i<true_value_x.length;i++){
+          let scope={
+              x1:true_value_x[i],
+              x2:true_value_y[i]
+          }
+          //true_value_x[i]*true_value_x[i]+true_value_y[i]*true_value_y[i] +true_value_x[i]*true_value_y[i]- 6 * true_value_y[i]
+          let tmp = ( math.evaluate(document.getElementById("function").value,scope));
+          true_value_z.push(tmp);
+      }
+      let min_z = true_value_z[0];
+      let min_x = true_value_x[0];
+      let min_y = true_value_y[0];
+      for(let i=1;i<true_value_z.length;i++){
+          if(true_value_z[i]<min_z){
+              min_z = true_value_z[i];
+              min_x = true_value_x[i];
+              min_y = true_value_y[i];
+          }
+
+      }
+
+      min1 =[min_x];
+      min2 =[min_y];
+      min3 =[min_z];
+      var minDot = {
+          x: min2,
+          y: min1,
+          z: min3,
+
+          mode: 'markers',
+          marker: {
+              color: 'rgb(0,255,64)',
+              size: 6,
+
+              symbol: 'circle',
+              line: {
+                  color: 'rgb(204, 204, 204)',
+                  width: 1},
+              opacity: 0.8},
+          name: 'Min',
+          type: 'scatter3d'};
+
+
+      for(let i=1;i<true_value_z.length;i++){
+          if(true_value_z[i]>min_z){
+              min_z = true_value_z[i];
+              min_x = true_value_x[i];
+              min_y = true_value_y[i];
+          }
+
+      }
+      max1 =[min_x];
+      max2 =[min_y];
+      max3 =[min_z];
+      var maxDot = {
+          x: max2,
+          y: max1,
+          z: max3,
+
+          mode: 'markers',
+          marker: {
+              color: 'rgb(253,0,213)',
+              size: 6,
+
+              symbol: 'circle',
+              line: {
+                  color: 'rgb(204, 204, 204)',
+                  width: 1},
+              opacity: 0.8},
+          name: 'Max',
+          type: 'scatter3d'};
+     /*   test1=[];
+        test2=[];
+        let max = 10;
+        let min = -10;
+        let r =Math.random();
+        console.log(r);
+      for (let i = 0; i < 20; i++) {
+          let y=Math.random()*(max - min) + min;
+
+          test1.push(y);
+
+
+          test2.push(Math.random()*(max - min) + min);
+
+      }
+
+
+      for (let i = 0; i < 121; i++) {
+          for (let j = 0; j < 20; j++) {
+              test1[j]=test1[j]+(max-min)*r;
+              test2[j]=test2[j]+(max-min)*r;
+          //    console.log(test1[j]+" "+test2[j]);
+          }
+      }
+      tmp =[];
+
+      for (let i = 0; i < 20; i++) {
+          let scope={
+              x1:test1[i],
+              x2: test2[i]
+          }
+        tmp.push(math.evaluate("x1^2 +x2^2 +x1*x2 -6*x2",scope));
+
+      }
+
+      */
+
+      var allDot = {
+          x: true_value_y,
+          y: true_value_x,
+          z: true_value_z,
+
+          mode: 'markers',
+          marker: {
+              color: 'rgb(51,51,51)',
+              size: 3,
+
+              symbol: 'circle',
+              line: {
+                  color: 'rgb(204, 204, 204)',
+                  width: 1},
+              opacity: 0.8},
+          name: 'Допустимые',
+          type: 'scatter3d'};
+      var layout = {margin: {
+              l: 0,
+              r: 0,
+              b: 0,
+              t: 0
+          }};
+      var data_z1 = {x: x1,y:y1,z:z1, name: 'График',type: 'surface',showlegend:false};
+      Plotly.newPlot('myDiv', [data_z1,allDot,minDot,maxDot],layout);
+  }
+
+
+  function dataOfGraphics( ){
+
+
+
+  }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.6.0/math.js" integrity="sha512-RefYJFvLbj6WnGkdf40i7tlnvORh5VhCXuyaYRrj0hu5y0aHMCO1ROPLnRfMzbZ7SJqCYaQ92EAsGf9OyY9BNQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.6.0/math.min.js" integrity="sha512-9qfdR6pERAjxQpEu82E6QMq1XzFr8zIGc90P/jMlkCiHtcd3WJlY3Pi81uHBsEbzxAqfRhChEoBcyyycfdzdxg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</body>
+</html>
