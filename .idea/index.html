@@ -18,7 +18,7 @@
 <h2>Функция и метод</h2>
 <input id ="function" >
 <select id="method">
-    <option>Метод перебора по сетку</option>
+    <option>Метод перебора по сетке</option>
     <option>Метод Монте-Карло</option>
     <option>Метод Хука-Дживса</option>
     <option>Метод Штрафных функций</option>
@@ -41,8 +41,13 @@
 </table>
 <button id ="add">Добавить ограничение</button>
 
-
-
+<h3>Диапазон графика</h3>
+<label for="from"> От</label>
+<input type="number" id="from">
+<label for="to"> До</label>
+<input type="number" id="to">
+<label for="step"> С шагом</label>
+<input type="number" id="step">
 <form id="grid">
     <h3>Метод перебора по сетке</h3>
     <label for="from"> От</label>
@@ -51,6 +56,15 @@
     <input type="number" id="to">
     <label for="step"> С шагом</label>
     <input type="number" id="step">
+</form>
+<form id="grid">
+    <h3>Метод Монте-Карло</h3>
+    <label for="from1"> От</label>
+    <input type="number" id="from1">
+    <label for="to1"> До</label>
+    <input type="number" id="to1">
+    <label for="step1"> Число k</label>
+    <input type="number" id="step1">
 </form>
 <button onclick="simple()">Start</button>
 
@@ -122,6 +136,8 @@
 
         }
     }
+
+
   function simple(){
       x1 =[];
       y1=[];
@@ -130,6 +146,63 @@
       let step = document.getElementById("step").value;
 
      let n = (Math.abs(n1)+Math.abs(n2))/step;
+      n = Math.floor(n);
+      for(let i =0;i<n;i++){
+          x1.push(Number(n1)+(step*i));
+          y1.push(Number(n1)+(step*i));
+      }
+
+      z1=[];
+      true_value_x =[];
+      true_value_y =[];
+      true_value_z =[];
+      for(let i = 0;i<x1.length;i++){
+          tmp=[];
+
+          for(let j =0; j<y1.length;j++){
+              if(isOk(x1[i],y1[j])){
+                  true_value_x.push(x1[i]);
+                  true_value_y.push(y1[j]);
+              }
+              let scope={
+                  x1:x1[i],
+                  x2:y1[j]
+              }
+
+              tmp.push( math.evaluate(document.getElementById("function").value,scope));
+
+          }
+          z1.push(tmp);
+
+      }
+        let allGraphicPar = allGraphic(x1,y1,z1);
+      for(let i = 0;i<true_value_x.length;i++){
+          let scope={
+              x1:true_value_x[i],
+              x2:true_value_y[i]
+          }
+
+          let tmp = ( math.evaluate(document.getElementById("function").value,scope));
+          true_value_z.push(tmp);
+      }
+        let allDotPar = allDot(true_value_x,true_value_y,true_value_z);
+
+        let minDot = minValue(true_value_x,true_value_y,true_value_z);
+        let maxDot = maxValue(true_value_x,true_value_y,true_value_z);
+      creatChart(allGraphicPar,allDotPar,minDot,maxDot);
+     // monteCarlo();
+     // dataOfGraphics(min1,min2,min3,max1,max2,max3,true_value_x,true_value_y,true_value_z,x1,y1,z1);
+
+  }
+
+  function monteCarlo(){
+      x1 =[];
+      y1=[];
+      let n1 = document.getElementById("from").value;
+      let n2 = document.getElementById("to").value;
+      let step = document.getElementById("step").value;
+
+      let n = (Math.abs(n1)+Math.abs(n2))/step;
       n = Math.floor(n);
       for(let i =0;i<n;i++){
           x1.push(Number(n1)+(step*i));
@@ -146,12 +219,7 @@
           tmp=[];
 
           for(let j =0; j<y1.length;j++){
-              if(isOk(x1[i],y1[j])==true){
-                  true_value_x.push(x1[i]);
-                  true_value_y.push(y1[j]);
 
-
-              }
               let scope={
                   x1:x1[i],
                   x2:y1[j]
@@ -164,147 +232,174 @@
 
       }
 
-      for(let i = 0;i<true_value_x.length;i++){
-          let scope={
-              x1:true_value_x[i],
-              x2:true_value_y[i]
-          }
-          //true_value_x[i]*true_value_x[i]+true_value_y[i]*true_value_y[i] +true_value_x[i]*true_value_y[i]- 6 * true_value_y[i]
-          let tmp = ( math.evaluate(document.getElementById("function").value,scope));
-          true_value_z.push(tmp);
-      }
-      let min_z = true_value_z[0];
-      let min_x = true_value_x[0];
-      let min_y = true_value_y[0];
-      for(let i=1;i<true_value_z.length;i++){
-          if(true_value_z[i]<min_z){
-              min_z = true_value_z[i];
-              min_x = true_value_x[i];
-              min_y = true_value_y[i];
-          }
+
+      x=[];
+        y=[];
+        let max=10;
+        let min=-10;
+        let k=121;
+        z =[];
+      for (let i = 0; i <k; i++) {
+              let t1 = min + (max - min) * Math.random();
+              let t2 = min + (max - min) * Math.random();
+
+
+
+                x[i]=t1;
+                y[i]=t2;
+
+                let scope = {
+                    x1: x[i],
+                    x2: y[i]
+                }
+                //true_value_x[i]*true_value_x[i]+true_value_y[i]*true_value_y[i] +true_value_x[i]*true_value_y[i]- 6 * true_value_y[i]
+                let tmp = (math.evaluate(document.getElementById("function").value, scope));
+                z.push(tmp)
 
       }
-
-      min1 =[min_x];
-      min2 =[min_y];
-      min3 =[min_z];
-      var minDot = {
-          x: min2,
-          y: min1,
-          z: min3,
-
-          mode: 'markers',
-          marker: {
-              color: 'rgb(0,255,64)',
-              size: 6,
-
-              symbol: 'circle',
-              line: {
-                  color: 'rgb(204, 204, 204)',
-                  width: 1},
-              opacity: 0.8},
-          name: 'Min',
-          type: 'scatter3d'};
-
-
-      for(let i=1;i<true_value_z.length;i++){
-          if(true_value_z[i]>min_z){
-              min_z = true_value_z[i];
-              min_x = true_value_x[i];
-              min_y = true_value_y[i];
+        let min1=x[0];
+        let min2=y[0];
+        let min3=z[0];
+      for (let i = 1; i < k; i++) {
+          if(min3>z[i] && isOk(x[i],y[i])){
+              console.log(min3);
+              min1=x[i];
+              min2=y[i];
+              min3=z[i];
+              console.log(min1+" "+min2+" "+min3);
           }
 
       }
-      max1 =[min_x];
-      max2 =[min_y];
-      max3 =[min_z];
-      var maxDot = {
-          x: max2,
-          y: max1,
-          z: max3,
+      min1 = [min1];
+      min2 = [min2];
+      min3 = [min3];
+      let max1=x[0];
+      let max2=y[0];
+      let max3=z[0];
+      for (let i = 1; i < k; i++) {
+          if(max3<z[i] && isOk(x[i],y[i])){
 
-          mode: 'markers',
-          marker: {
-              color: 'rgb(253,0,213)',
-              size: 6,
+              max1=x[i];
+              max2=y[i];
+              max3=z[i];
 
-              symbol: 'circle',
-              line: {
-                  color: 'rgb(204, 204, 204)',
-                  width: 1},
-              opacity: 0.8},
-          name: 'Max',
-          type: 'scatter3d'};
-     /*   test1=[];
-        test2=[];
-        let max = 10;
-        let min = -10;
-        let r =Math.random();
-        console.log(r);
-      for (let i = 0; i < 20; i++) {
-          let y=Math.random()*(max - min) + min;
-
-          test1.push(y);
-
-
-          test2.push(Math.random()*(max - min) + min);
-
-      }
-
-
-      for (let i = 0; i < 121; i++) {
-          for (let j = 0; j < 20; j++) {
-              test1[j]=test1[j]+(max-min)*r;
-              test2[j]=test2[j]+(max-min)*r;
-          //    console.log(test1[j]+" "+test2[j]);
           }
-      }
-      tmp =[];
 
-      for (let i = 0; i < 20; i++) {
-          let scope={
-              x1:test1[i],
-              x2: test2[i]
-          }
-        tmp.push(math.evaluate("x1^2 +x2^2 +x1*x2 -6*x2",scope));
 
       }
+      max1 = [max1];
+      max2 = [max2];
+      max3 = [max3];
+      //dataOfGraphics(min1,min2,min3,max1,max2,max3,x,y,z,x1,y1,z1);
 
-      */
-
-      var allDot = {
-          x: true_value_y,
-          y: true_value_x,
-          z: true_value_z,
-
-          mode: 'markers',
-          marker: {
-              color: 'rgb(51,51,51)',
-              size: 3,
-
-              symbol: 'circle',
-              line: {
-                  color: 'rgb(204, 204, 204)',
-                  width: 1},
-              opacity: 0.8},
-          name: 'Допустимые',
-          type: 'scatter3d'};
-      var layout = {margin: {
-              l: 0,
-              r: 0,
-              b: 0,
-              t: 0
-          }};
-      var data_z1 = {x: x1,y:y1,z:z1, name: 'График',type: 'surface',showlegend:false};
-      Plotly.newPlot('myDiv', [data_z1,allDot,minDot,maxDot],layout);
   }
 
+    function minValue(x,y,z){
+        let min_x = x[0];
+        let min_y = y[0];
+        let min_z = z[0];
+        for(let i=1;i<z.length;i++){
+            if(z[i]<min_z){
 
-  function dataOfGraphics( ){
+                min_x = x[i];
+                min_y = y[i];
+                min_z = z[i];
+            }
+        }
+        return minDot([min_x],[min_y],[min_z]);
+    }
+
+    function maxValue(x,y,z){
+        let max1=x[0];
+        let max2=y[0];
+        let max3=z[0];
+        for (let i = 1; i < z.length; i++) {
+            if(max3<z[i] && isOk(x[i],y[i])){
+
+                max1=x[i];
+                max2=y[i];
+                max3=z[i];
+
+            }
 
 
+        }
 
-  }
+
+        return maxDot([max1],[max2],[max3]);
+    }
+    function creatChart(allGraphic,allDot,minDot,maxDot){
+        Plotly.newPlot('myDiv', [allGraphic,allDot,minDot,maxDot]);
+    }
+    function allGraphic(x1,y1,z1){
+        var allGraphic = {x: x1,y:y1,z:z1, name: 'График',type: 'surface',showlegend:false};
+        return allGraphic;
+    }
+
+    function minDot(min1,min2,min3){
+        var minDot = {
+            x: min2,
+            y: min1,
+            z: min3,
+
+            mode: 'markers',
+            marker: {
+                color: 'rgb(255,115,0)',
+                size: 8,
+
+                symbol: 'circle',
+                line: {
+                    color: 'rgb(204, 204, 204)',
+                    width: 1},
+                opacity: 0.8},
+            name: 'Min',
+            type: 'scatter3d'};
+        return minDot;
+    }
+
+    function maxDot(max1,max2,max3){
+        var maxDot = {
+            x: max2,
+            y: max1,
+            z: max3,
+
+            mode: 'markers',
+            marker: {
+                color: 'rgb(253,0,213)',
+                size: 8,
+
+                symbol: 'circle',
+                line: {
+                    color: 'rgb(204, 204, 204)',
+                    width: 1},
+                opacity: 0.8},
+            name: 'Max',
+            type: 'scatter3d'};
+
+    }
+
+    function allDot(x,y,z){
+        var allDot = {
+            x: y,
+            y: x,
+            z: z,
+
+            mode: 'markers',
+            marker: {
+                color: 'rgb(51,51,51)',
+                size: 3,
+
+                symbol: 'circle',
+                line: {
+                    color: 'rgb(204, 204, 204)',
+                    width: 1},
+                opacity: 0.8},
+            name: 'Допустимые',
+            type: 'scatter3d'};
+        return allDot;
+    }
+
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.6.0/math.js" integrity="sha512-RefYJFvLbj6WnGkdf40i7tlnvORh5VhCXuyaYRrj0hu5y0aHMCO1ROPLnRfMzbZ7SJqCYaQ92EAsGf9OyY9BNQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.6.0/math.min.js" integrity="sha512-9qfdR6pERAjxQpEu82E6QMq1XzFr8zIGc90P/jMlkCiHtcd3WJlY3Pi81uHBsEbzxAqfRhChEoBcyyycfdzdxg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
