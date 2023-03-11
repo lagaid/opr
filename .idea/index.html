@@ -17,7 +17,7 @@
 
 <h2>Функция и метод</h2>
 <input id="function">
-<select id="method">
+<select id="method" onchange="onchangeFunc()">
     <option>Метод перебора по сетке</option>
     <option>Метод Монте-Карло</option>
     <option>Метод Хука-Дживса</option>
@@ -43,36 +43,62 @@
 </table>
 <button id="add">Добавить ограничение</button>
 
-<h3>Диапазон графика</h3>
-<label for="from"> От</label>
-<input type="number" id="from">
-<label for="to"> До</label>
-<input type="number" id="to">
-<label for="step"> С шагом</label>
-<input type="number" id="step">
-<form id="grid">
+
+<form id="simple" type>
     <h3>Метод перебора по сетке</h3>
-    <label for="from"> От</label>
-    <input type="number" id="from">
-    <label for="to"> До</label>
-    <input type="number" id="to">
-    <label for="step"> С шагом</label>
-    <input type="number" id="step">
+    <label for="fromSimple"> От</label>
+    <input type="number" id="fromSimple">
+    <label for="toSimple"> До</label>
+    <input type="number" id="toSimple">
+    <label for="stepSimple"> С шагом</label>
+    <input type="number" id="stepSimple">
 </form>
-<form id="grid">
+<form id="monte" hidden="true">
     <h3>Метод Монте-Карло</h3>
-    <label for="from1"> От</label>
-    <input type="number" id="from1">
-    <label for="to1"> До</label>
-    <input type="number" id="to1">
-    <label for="step1"> Число k</label>
-    <input type="number" id="step1">
+    <label for="fromMonte"> От</label>
+    <input type="number" id="fromMonte">
+    <label for="toMonte"> До</label>
+    <input type="number" id="toMonte">
+    <label for="stepMonte"> Шаг</label>
+    <input type="number" id="stepMonte">
+    <br>
+    <label for="minMonte"> Минимальное число</label>
+    <input type="number" id="minMonte">
+    <label for="maxMonte"> Максимальное число</label>
+    <input type="number" id="maxMonte">
+    <label for="kMonte"> Число k</label>
+    <input type="number" id="kMonte">
+
 </form>
-<button onclick="simple()">Start</button>
+<button onclick="getFunction()">Start</button>
 
 
 <div id='myDiv'><!-- Plotly chart will be drawn inside this DIV --></div>
 <script>
+
+    function onchangeFunc(){
+        let sign = document.getElementById("method").value;
+        console.log(sign);
+        switch (sign){
+            case 'Метод перебора по сетке':
+               document.getElementById("simple").hidden=false;
+               document.getElementById("monte").hidden=true;
+
+                break;
+            case 'Метод Монте-Карло':
+                document.getElementById("simple").hidden=true;
+                document.getElementById("monte").hidden=false;
+                break;
+            case 'Метод Хука-Дживса':
+
+                break;
+            case 'Метод Штрафных функций':
+
+                break;
+        }
+    }
+
+
     $(document).ready(function () {
         $("#add").click(function () {
 
@@ -96,7 +122,24 @@
     $("#table").on('click', '.btnDelete', function () {
         $(this).closest('tr').remove();
     });
+    function getFunction(){
+        let sign = document.getElementById("method").value;
+        switch (sign){
+            case 'Метод перебора по сетке':
+                simple();
+                break;
+            case 'Метод Монте-Карло':
+                monteCarlo();
+                break;
+            case 'Метод Хука-Дживса':
+                huk();
+                break;
+            case 'Метод Штрафных функций':
+                shtraf();
+                break;
+        }
 
+    }
     function getLimits() {
         tb = [[]];
         let table = document.getElementById("table");
@@ -143,13 +186,13 @@
         }
     }
 
-    function getXYZ() {
+    function getXYZ(from,to,stepStr) {
         x1 = [];
         y1 = [];
         z1 = [];
-        let n1 = document.getElementById("from").value;
-        let n2 = document.getElementById("to").value;
-        let step = document.getElementById("step").value;
+        let n1 = document.getElementById(from).value;
+        let n2 = document.getElementById(to).value;
+        let step = document.getElementById(stepStr).value;
 
         let n = (Math.abs(n1) + Math.abs(n2)) / step;
         n = Math.floor(n);
@@ -196,7 +239,7 @@
 
 
     function simple() {
-        arr = getXYZ();
+        arr = getXYZ("fromSimple","toSimple","stepSimple");
         x1 = arr[0];
         y1 = arr[1];
         z1 = arr[2];
@@ -221,7 +264,8 @@
 
     function monteCarlo() {
 
-        arr = getXYZ();
+        arr = getXYZ("fromMonte","toMonte","stepMonte");
+
         x1 = arr[0];
         y1 = arr[1];
         z1 = arr[2];
@@ -229,9 +273,10 @@
         x = [];
         y = [];
         z = [];
-        let max = 10;
-        let min = -10;
-        let k = 121;
+
+        let min = Number(document.getElementById("minMonte").value);
+        let max = Number(document.getElementById("maxMonte").value);
+        let k = document.getElementById("kMonte").value;
 
         for (let i = 0; i < k; i++) {
             let t1 = min + (max - min) * Math.random();
@@ -247,7 +292,7 @@
             }
             let tmp = (math.evaluate(document.getElementById("function").value, scope));
             z.push(tmp)
-
+          //  console.log(i);
         }
         true_value_x = [];
         true_value_y = [];
@@ -267,8 +312,14 @@
         let allDotPar = allDot(true_value_x, true_value_y, true_value_z);
         let minDot = minValue(true_value_x, true_value_y, true_value_z);
         let maxDot = maxValue(true_value_x, true_value_y, true_value_z);
-        //dataOfGraphics(min1,min2,min3,max1,max2,max3,x,y,z,x1,y1,z1);
+
         creatChart(allGraphicPar, allDotPar, minDot, maxDot);
+    }
+    function huk(){
+
+    }
+    function shtraf(){
+
     }
 
     function minValue(x, y, z) {
@@ -276,7 +327,7 @@
         let min_y = y[0];
         let min_z = z[0];
         for (let i = 1; i < z.length; i++) {
-            if (z[i] < min_z && isOk(x[i],y[i])) {
+            if (z[i] < min_z ) {
 
                 min_x = x[i];
                 min_y = y[i];
@@ -291,7 +342,7 @@
         let max2 = y[0];
         let max3 = z[0];
         for (let i = 1; i < z.length; i++) {
-            if (max3 < z[i] && isOk(x[i],y[i])) {
+            if (max3 < z[i] ) {
 
                 max1 = x[i];
                 max2 = y[i];
