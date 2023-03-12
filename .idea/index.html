@@ -70,7 +70,7 @@
     <input type="number" id="kMonte">
 
 </form>
-<button onclick="getFunction()">Start</button>
+<button onclick="huk()">Start</button>
 
 
 <div id='myDiv'><!-- Plotly chart will be drawn inside this DIV --></div>
@@ -316,7 +316,84 @@
         creatChart(allGraphicPar, allDotPar, minDot, maxDot);
     }
     function huk(){
+        let startX=-100;
+        let startY=-100;
+        let stepX = 1;
+        let stepY = 1;
+        let eps=0.00001;
 
+        while(stepX>eps || stepY>eps){
+           console.log(startX+" "+ startY);
+            let scope = {
+                x1:startX,
+                x2:startY
+            };
+            let original;
+            original = math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", scope);
+            if(!isOk(startX,startY))
+                original = Number.MAX_VALUE;
+            let x = leftRight(startX,startY,stepX);
+
+            if(original> math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", x)){
+                startX =x.x1;
+                startY =x.x2;
+            }
+            else if(original< math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", x)){
+                stepX= Number(stepX)/2;
+            }
+            scope = {
+                x1:startX,
+                x2:startY
+            };
+
+            original = math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", scope);
+            if(!isOk(startX,startY))
+                original = Number.MAX_VALUE;
+            let y = upDown(startX,startY,stepY);
+            if(original> math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", y)){
+                startX =y.x1;
+                startY =y.x2;
+            }
+            else if(original< math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", y)){
+
+                stepY= Number(stepY)/2;
+            }
+
+        }
+        console.log("final");
+        console.log(startX);
+        console.log(startY);
+    }
+
+    function leftRight(xPoint,yPoint,stepX){
+        let plusScope = {
+            x1:xPoint+stepX,
+            x2:yPoint
+        };
+        let minusScope ={
+            x1:xPoint-stepX,
+            x2:yPoint
+        };
+        let minus =math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", minusScope);
+        let plus =math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", plusScope);
+        if(minus<plus)
+            return minusScope;
+        else return plusScope;
+    }
+    function upDown(xPoint,yPoint,stepY){
+        let plusScope = {
+            x1:xPoint,
+            x2:yPoint+stepY
+        };
+        let minusScope ={
+            x1:xPoint,
+            x2:yPoint-stepY
+        };
+        let minus =math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", minusScope);
+        let plus =math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", plusScope);
+        if(minus<plus)
+            return minusScope;
+        else return plusScope;
     }
     function shtraf(){
 
