@@ -316,53 +316,41 @@
         creatChart(allGraphicPar, allDotPar, minDot, maxDot);
     }
     function huk(){
-        let startX=-100;
-        let startY=-100;
+        let startX=Math.random();
+        let startY=Math.random();
         let stepX = 1;
         let stepY = 1;
-        let eps=0.00001;
+        let eps=0.0000000001;
 
         while(stepX>eps || stepY>eps){
-           console.log(startX+" "+ startY);
-            let scope = {
-                x1:startX,
-                x2:startY
+            let scope ={
+              x1:startX,
+              x2:startY
             };
-            let original;
-            original = math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", scope);
-            if(!isOk(startX,startY))
-                original = Number.MAX_VALUE;
-            let x = leftRight(startX,startY,stepX);
+        let mainValue = math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", scope);
+        let xValue = leftRight(startX,startY,stepX);
+        if(mainValue>math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", xValue)){
+            startX=xValue.x1;
+            startY=xValue.x2;
+             }
+        else stepX = stepX * 0.1;
 
-            if(original> math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", x)){
-                startX =x.x1;
-                startY =x.x2;
-            }
-            else if(original< math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", x)){
-                stepX= Number(stepX)/2;
-            }
             scope = {
-                x1:startX,
-                x2:startY
+                x1: startX,
+                x2: startY
             };
-
-            original = math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", scope);
-            if(!isOk(startX,startY))
-                original = Number.MAX_VALUE;
-            let y = upDown(startX,startY,stepY);
-            if(original> math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", y)){
-                startX =y.x1;
-                startY =y.x2;
+            mainValue = math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", scope);
+            let yValue = upDown(startX, startY, stepY);
+            if (mainValue > math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", yValue)) {
+                startX = yValue.x1;
+                startY = yValue.x2;
             }
-            else if(original< math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", y)){
-
-                stepY= Number(stepY)/2;
-            }
-
+            else stepY = stepY *0.1;
         }
-        console.log("final");
         console.log(startX);
         console.log(startY);
+
+
     }
 
     function leftRight(xPoint,yPoint,stepX){
@@ -374,11 +362,15 @@
             x1:xPoint-stepX,
             x2:yPoint
         };
-        let minus =math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", minusScope);
-        let plus =math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", plusScope);
+        let minus;
+        let plus
+
+         minus =math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", minusScope);
+         plus =math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", plusScope);
         if(minus<plus)
             return minusScope;
         else return plusScope;
+
     }
     function upDown(xPoint,yPoint,stepY){
         let plusScope = {
@@ -389,12 +381,19 @@
             x1:xPoint,
             x2:yPoint-stepY
         };
-        let minus =math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", minusScope);
-        let plus =math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", plusScope);
-        if(minus<plus)
+        let minus;
+        let plus
+
+            minus =math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", minusScope);
+
+            plus =math.evaluate("x1^2 + x2^2 -6*x1 - 10*x2", plusScope);
+
+       if(minus<plus)
             return minusScope;
         else return plusScope;
+
     }
+
     function shtraf(){
 
     }
